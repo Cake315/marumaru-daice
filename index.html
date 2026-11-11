@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>まるまるのサイコロ学習サポート</title>
+    <title>まるまるの学習サポート（サイコロ＆コイントス）</title>
     <style>
         :root {
             --bg-color: #FFF9E6;
@@ -34,20 +34,48 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 16px 16px;
+            padding: 16px;
             box-sizing: border-box;
-            gap: 12px;
+            gap: 10px;
+        }
+
+        /* モード切り替えタブ */
+        .tabs {
+            display: flex;
+            width: 100%;
+            background: #FFF0F3;
+            border-radius: 20px;
+            padding: 3px;
+            box-sizing: border-box;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #888;
+            cursor: pointer;
+            border-radius: 16px;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: #FFFFFF;
+            color: #FF5C8A;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
         h1 {
-            font-size: 18px;
-            margin: 0 0 2px 0;
+            font-size: 17px;
+            margin: 4px 0 2px 0;
             color: #444;
             text-align: center;
         }
 
         p.sub-text {
-            font-size: 12px;
+            font-size: 11px;
             color: #777;
             margin: 0;
             text-align: center;
@@ -59,11 +87,11 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 4px 0;
+            margin: 2px 0;
         }
 
         .character-img {
-            width: 150px;
+            width: 140px;
             height: auto;
             object-fit: contain;
         }
@@ -77,33 +105,51 @@
             50% { transform: translateY(-6px); }
         }
 
-        /* 視覚的なサイコロ（コンパクト化） */
-        .dice-box {
-            width: 48px;
-            height: 48px;
+        /* ツール表示部（サイコロ・コイン共通） */
+        .tool-display {
+            width: 52px;
+            height: 52px;
             background: #D93838;
             border: 2.5px solid #333;
-            border-radius: 10px;
+            border-radius: 12px;
             box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 22px;
+            font-weight: bold;
+            color: #FFF;
+            transition: transform 0.3s;
+        }
+
+        /* コイン用のデザイン */
+        .tool-display.coin {
+            background: #FFD700;
+            color: #B8860B;
+            border-radius: 50%;
+            border: 3px solid #DAA520;
+        }
+
+        .tool-display.rolling {
+            animation: spin 0.3s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: scale(1) rotateY(0deg); }
+            50% { transform: scale(1.1) rotateY(180deg); }
+            100% { transform: scale(1) rotateY(360deg); }
+        }
+
+        /* サイコロのドットグリッド */
+        .dice-grid {
+            width: 100%;
+            height: 100%;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
             padding: 6px;
             box-sizing: border-box;
-            transform: rotate(8deg);
-            transition: transform 0.3s;
         }
-
-        .dice-box.rolling {
-            animation: diceSpin 0.4s linear infinite;
-        }
-
-        @keyframes diceSpin {
-            0% { transform: scale(1) rotate(0deg); }
-            50% { transform: scale(1.1) rotate(180deg); }
-            100% { transform: scale(1) rotate(360deg); }
-        }
-
         .dot {
             background-color: #FFFFFF;
             border-radius: 50%;
@@ -113,8 +159,6 @@
             justify-self: center;
             opacity: 0;
         }
-
-        /* 目の位置指定（1〜6） */
         .dice-1 .dot-5 { opacity: 1; }
         .dice-2 .dot-1, .dice-2 .dot-9 { opacity: 1; }
         .dice-3 .dot-1, .dice-3 .dot-5, .dice-3 .dot-9 { opacity: 1; }
@@ -129,10 +173,11 @@
             justify-content: center;
             align-items: center;
             gap: 2px;
+            height: 42px;
         }
 
         .result-msg {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: bold;
             color: #FF5C8A;
             margin: 0;
@@ -157,9 +202,9 @@
         .btn {
             background-color: #FFF0F3;
             border: 2px solid #FF8DA1;
-            border-radius: 24px;
+            border-radius: 22px;
             padding: 10px;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: bold;
             color: #FF5C8A;
             cursor: pointer;
@@ -178,26 +223,28 @@
 <body>
 
     <div class="container">
+        <!-- 切り替えタブ -->
+        <div class="tabs">
+            <div class="tab active" id="tabDice" onclick="switchMode('dice')">🎲 サイコロ</div>
+            <div class="tab" id="tabCoin" onclick="switchMode('coin')">🪙 コイントス</div>
+        </div>
+
         <div>
-            <h1>さいころを ふるよ！</h1>
-            <p class="sub-text">勉強の合間に使ってね</p>
+            <h1 id="mainTitle">さいころを ふるよ！</h1>
+            <p class="sub-text" id="subText">勉強の合間に使ってね</p>
         </div>
 
         <div class="stage">
             <img src="marumaru.png" alt="まるまる" class="character-img" id="charImg">
         </div>
 
-        <!-- 振るたびに目が変わるグラフィカルなサイコロ -->
-        <div class="dice-box dice-1" id="diceVisual">
-            <div class="dot dot-1"></div>
-            <div class="dot dot-2"></div>
-            <div class="dot dot-3"></div>
-            <div class="dot dot-4"></div>
-            <div class="dot dot-5"></div>
-            <div class="dot dot-6"></div>
-            <div class="dot dot-7"></div>
-            <div class="dot dot-8"></div>
-            <div class="dot dot-9"></div>
+        <!-- サイコロまたはコインが表示されるボックス -->
+        <div class="tool-display dice-1" id="toolBox">
+            <div class="dice-grid" id="diceGrid">
+                <div class="dot dot-1"></div><div class="dot dot-2"></div><div class="dot dot-3"></div>
+                <div class="dot dot-4"></div><div class="dot dot-5"></div><div class="dot dot-6"></div>
+                <div class="dot dot-7"></div><div class="dot dot-8"></div><div class="dot dot-9"></div>
+            </div>
         </div>
 
         <div class="result-container">
@@ -209,31 +256,81 @@
     </div>
 
     <script>
-        const rollBtn = document.getElementById('rollBtn');
+        let currentMode = 'dice'; // 'dice' または 'coin'
+
+        const tabDice = document.getElementById('tabDice');
+        const tabCoin = document.getElementById('tabCoin');
+        const mainTitle = document.getElementById('mainTitle');
+        const subText = document.getElementById('subText');
         const charImg = document.getElementById('charImg');
-        const diceVisual = document.getElementById('diceVisual');
+        const toolBox = document.getElementById('toolBox');
+        const diceGrid = document.getElementById('diceGrid');
         const resultMsg = document.getElementById('resultMsg');
         const hanamaruStamp = document.getElementById('hanamaruStamp');
+        const rollBtn = document.getElementById('rollBtn');
+
+        function switchMode(mode) {
+            currentMode = mode;
+            hanamaruStamp.classList.remove('show');
+            charImg.classList.remove('shaking');
+
+            if (mode === 'dice') {
+                tabDice.classList.add('active');
+                tabCoin.classList.remove('active');
+                mainTitle.textContent = "さいころを ふるよ！";
+                subText.textContent = "勉強の合間に使ってね";
+                rollBtn.textContent = "もういちど振る";
+                resultMsg.textContent = "ボタンを押してね";
+                
+                toolBox.className = "tool-display dice-1";
+                diceGrid.style.display = "grid";
+                toolBox.innerHTML = '';
+                toolBox.appendChild(diceGrid);
+            } else {
+                tabCoin.classList.add('active');
+                tabDice.classList.remove('active');
+                mainTitle.textContent = "コイントスをするよ！";
+                subText.textContent = "どっちが出るかな？";
+                rollBtn.textContent = "コインを投げる";
+                resultMsg.textContent = "ボタンを押してね";
+
+                toolBox.className = "tool-display coin";
+                toolBox.textContent = "表";
+            }
+        }
 
         rollBtn.addEventListener('click', () => {
             rollBtn.disabled = true;
             charImg.classList.add('shaking');
-            diceVisual.classList.add('rolling');
-            resultMsg.textContent = "ころころ…";
+            toolBox.classList.add('rolling');
+            resultMsg.textContent = "ぽんっ！…";
             hanamaruStamp.classList.remove('show');
 
             let count = 0;
             const timer = setInterval(() => {
-                const tempNum = Math.floor(Math.random() * 6) + 1;
-                diceVisual.className = `dice-box rolling dice-${tempNum}`;
+                if (currentMode === 'dice') {
+                    const tempNum = Math.floor(Math.random() * 6) + 1;
+                    toolBox.className = `tool-display rolling dice-${tempNum}`;
+                } else {
+                    toolBox.textContent = Math.random() < 0.5 ? "表" : "裏";
+                }
                 count++;
 
                 if (count > 7) {
                     clearInterval(timer);
-                    const finalNum = Math.floor(Math.random() * 6) + 1;
-                    diceVisual.className = `dice-box dice-${finalNum}`;
+                    toolBox.classList.remove('rolling');
                     charImg.classList.remove('shaking');
-                    resultMsg.textContent = `${finalNum}の目が出たよ！えらいねぇ✨`;
+
+                    if (currentMode === 'dice') {
+                        const finalNum = Math.floor(Math.random() * 6) + 1;
+                        toolBox.className = `tool-display dice-${finalNum}`;
+                        resultMsg.textContent = `${finalNum}の目が出たよ！✨`;
+                    } else {
+                        const finalCoin = Math.random() < 0.5 ? "表" : "裏";
+                        toolBox.textContent = finalCoin;
+                        resultMsg.textContent = `結果は「${finalCoin}」だよ！✨`;
+                    }
+
                     hanamaruStamp.classList.add('show');
                     rollBtn.disabled = false;
                 }
