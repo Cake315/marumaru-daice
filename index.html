@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>まるまるのサイコロ学習サポート</title>
+    <style>
+        :root {
+            --bg-color: #FFF9E6;
+            --main-color: #333333;
+            --accent-pink: #FFB7C5;
+            --accent-red: #FF6B6B;
+            --box-bg: #FFFFFF;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            color: var(--main-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 360px;
+            background-color: var(--box-bg);
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 16px;
+            box-sizing: border-box;
+            gap: 12px;
+        }
+
+        h1 {
+            font-size: 18px;
+            margin: 0 0 2px 0;
+            color: #444;
+            text-align: center;
+        }
+
+        p.sub-text {
+            font-size: 12px;
+            color: #777;
+            margin: 0;
+            text-align: center;
+        }
+
+        .stage {
+            position: relative;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 4px 0;
+        }
+
+        .character-img {
+            width: 150px;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .shaking {
+            animation: bounce 0.35s ease infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        /* 視覚的なサイコロ（コンパクト化） */
+        .dice-box {
+            width: 48px;
+            height: 48px;
+            background: #D93838;
+            border: 2.5px solid #333;
+            border-radius: 10px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            padding: 6px;
+            box-sizing: border-box;
+            transform: rotate(8deg);
+            transition: transform 0.3s;
+        }
+
+        .dice-box.rolling {
+            animation: diceSpin 0.4s linear infinite;
+        }
+
+        @keyframes diceSpin {
+            0% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(180deg); }
+            100% { transform: scale(1) rotate(360deg); }
+        }
+
+        .dot {
+            background-color: #FFFFFF;
+            border-radius: 50%;
+            width: 6px;
+            height: 6px;
+            align-self: center;
+            justify-self: center;
+            opacity: 0;
+        }
+
+        /* 目の位置指定（1〜6） */
+        .dice-1 .dot-5 { opacity: 1; }
+        .dice-2 .dot-1, .dice-2 .dot-9 { opacity: 1; }
+        .dice-3 .dot-1, .dice-3 .dot-5, .dice-3 .dot-9 { opacity: 1; }
+        .dice-4 .dot-1, .dice-4 .dot-3, .dice-4 .dot-7, .dice-4 .dot-9 { opacity: 1; }
+        .dice-5 .dot-1, .dice-5 .dot-3, .dice-5 .dot-5, .dice-5 .dot-7, .dice-5 .dot-9 { opacity: 1; }
+        .dice-6 .dot-1, .dice-6 .dot-3, .dice-6 .dot-4, .dice-6 .dot-6, .dice-6 .dot-7, .dice-6 .dot-9 { opacity: 1; }
+
+        .result-container {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .result-msg {
+            font-size: 15px;
+            font-weight: bold;
+            color: #FF5C8A;
+            margin: 0;
+        }
+
+        .hanamaru-stamp {
+            font-size: 11px;
+            color: #FF4A4A;
+            background: #FFF0F3;
+            padding: 2px 10px;
+            border-radius: 12px;
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .hanamaru-stamp.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .btn {
+            background-color: #FFF0F3;
+            border: 2px solid #FF8DA1;
+            border-radius: 24px;
+            padding: 10px;
+            font-size: 15px;
+            font-weight: bold;
+            color: #FF5C8A;
+            cursor: pointer;
+            box-shadow: 0 3px #FF8DA1;
+            width: 100%;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px #FF8DA1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div>
+            <h1>さいころを ふるよ！</h1>
+            <p class="sub-text">勉強の合間に使ってね</p>
+        </div>
+
+        <div class="stage">
+            <img src="marumaru.png" alt="まるまる" class="character-img" id="charImg">
+        </div>
+
+        <!-- 振るたびに目が変わるグラフィカルなサイコロ -->
+        <div class="dice-box dice-1" id="diceVisual">
+            <div class="dot dot-1"></div>
+            <div class="dot dot-2"></div>
+            <div class="dot dot-3"></div>
+            <div class="dot dot-4"></div>
+            <div class="dot dot-5"></div>
+            <div class="dot dot-6"></div>
+            <div class="dot dot-7"></div>
+            <div class="dot dot-8"></div>
+            <div class="dot dot-9"></div>
+        </div>
+
+        <div class="result-container">
+            <p class="result-msg" id="resultMsg">ボタンを押してね</p>
+            <div class="hanamaru-stamp" id="hanamaruStamp">💮 はなまる！よくできました！</div>
+        </div>
+
+        <button class="btn" id="rollBtn">もういちど振る</button>
+    </div>
+
+    <script>
+        const rollBtn = document.getElementById('rollBtn');
+        const charImg = document.getElementById('charImg');
+        const diceVisual = document.getElementById('diceVisual');
+        const resultMsg = document.getElementById('resultMsg');
+        const hanamaruStamp = document.getElementById('hanamaruStamp');
+
+        rollBtn.addEventListener('click', () => {
+            rollBtn.disabled = true;
+            charImg.classList.add('shaking');
+            diceVisual.classList.add('rolling');
+            resultMsg.textContent = "ころころ…";
+            hanamaruStamp.classList.remove('show');
+
+            let count = 0;
+            const timer = setInterval(() => {
+                const tempNum = Math.floor(Math.random() * 6) + 1;
+                diceVisual.className = `dice-box rolling dice-${tempNum}`;
+                count++;
+
+                if (count > 7) {
+                    clearInterval(timer);
+                    const finalNum = Math.floor(Math.random() * 6) + 1;
+                    diceVisual.className = `dice-box dice-${finalNum}`;
+                    charImg.classList.remove('shaking');
+                    resultMsg.textContent = `${finalNum}の目が出たよ！えらいねぇ✨`;
+                    hanamaruStamp.classList.add('show');
+                    rollBtn.disabled = false;
+                }
+            }, 70);
+        });
+    </script>
+</body>
+</html>
