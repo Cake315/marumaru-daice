@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>まるまるの学習サポート（サイコロ＆コイントス）</title>
+    <title>まるまるの学習サポート（画像切り替え版）</title>
     <style>
         :root {
             --bg-color: #FFF9E6;
@@ -39,7 +39,7 @@
             gap: 10px;
         }
 
-        /* モード切り替えタブ */
+        /* 切り替えタブ */
         .tabs {
             display: flex;
             width: 100%;
@@ -94,6 +94,7 @@
             width: 140px;
             height: auto;
             object-fit: contain;
+            transition: transform 0.2s;
         }
 
         .shaking {
@@ -105,7 +106,7 @@
             50% { transform: translateY(-6px); }
         }
 
-        /* ツール表示部（サイコロ・コイン共通） */
+        /* サイコロ・コイン表示部 */
         .tool-display {
             width: 52px;
             height: 52px;
@@ -122,7 +123,6 @@
             transition: transform 0.3s;
         }
 
-        /* コイン用のデザイン */
         .tool-display.coin {
             background: #FFD700;
             color: #B8860B;
@@ -140,7 +140,6 @@
             100% { transform: scale(1) rotateY(360deg); }
         }
 
-        /* サイコロのドットグリッド */
         .dice-grid {
             width: 100%;
             height: 100%;
@@ -235,10 +234,10 @@
         </div>
 
         <div class="stage">
-            <img src="marumaru.png" alt="まるまる" class="character-img" id="charImg">
+            <!-- 2枚の画像を切り替えるため id="charImg" を使用 -->
+            <img src="marumaru_normal.png" alt="まるまる" class="character-img" id="charImg">
         </div>
 
-        <!-- サイコロまたはコインが表示されるボックス -->
         <div class="tool-display dice-1" id="toolBox">
             <div class="dice-grid" id="diceGrid">
                 <div class="dot dot-1"></div><div class="dot dot-2"></div><div class="dot dot-3"></div>
@@ -256,7 +255,7 @@
     </div>
 
     <script>
-        let currentMode = 'dice'; // 'dice' または 'coin'
+        let currentMode = 'dice';
 
         const tabDice = document.getElementById('tabDice');
         const tabCoin = document.getElementById('tabCoin');
@@ -269,10 +268,15 @@
         const hanamaruStamp = document.getElementById('hanamaruStamp');
         const rollBtn = document.getElementById('rollBtn');
 
+        // 画像のファイル名定義（必要に応じて変更してください）
+        const imgNormal = "marumaru_normal.png"; // 待機中・振っているとき
+        const imgHappy = "marumaru_happy.png";   // 結果が出たとき
+
         function switchMode(mode) {
             currentMode = mode;
             hanamaruStamp.classList.remove('show');
             charImg.classList.remove('shaking');
+            charImg.src = imgNormal; // タブ切り替え時は通常画像に戻す
 
             if (mode === 'dice') {
                 tabDice.classList.add('active');
@@ -301,6 +305,7 @@
 
         rollBtn.addEventListener('click', () => {
             rollBtn.disabled = true;
+            charImg.src = imgNormal; // 振る瞬間は通常画像
             charImg.classList.add('shaking');
             toolBox.classList.add('rolling');
             resultMsg.textContent = "ぽんっ！…";
@@ -320,6 +325,9 @@
                     clearInterval(timer);
                     toolBox.classList.remove('rolling');
                     charImg.classList.remove('shaking');
+                    
+                    // 🌟 結果が出た瞬間に「嬉しい顔の画像」に切り替える！
+                    charImg.src = imgHappy;
 
                     if (currentMode === 'dice') {
                         const finalNum = Math.floor(Math.random() * 6) + 1;
